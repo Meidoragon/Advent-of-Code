@@ -4,7 +4,7 @@ Author : Meidoragon<Meidoragon@localhost>
 Date   : 2023-04-24
 Purpose: Row, row, fight the power.
 """
-
+#declarations
 test_input = """    [D]    
 [N] [C]    
 [Z] [M] [P]
@@ -29,10 +29,10 @@ probably the entire group, so they end up inverted from what the P1 movement wou
 5. use parsed instruction to operate the crane
 """
 
-import os
-import sys
 import argparse
 import pprint as p
+import re
+reBoxes = re.compile(r" ([0-9]+( +[0-9]+)+) ")
 # ----------------------------------------------------------------------------
 def get_args():
     """Get command-line arguments"""
@@ -53,7 +53,19 @@ def get_args():
 def main():
     """Okay 3, 2, 1, Let's Jam"""
     args = get_args()
-    p.pprint(read_input(args.input))
+    print(args.input)
+    print()
+    a = read_input(args.input)
+    p.pprint(a)
+    print()
+    b = separate(a)
+    p.pprint(b['rows'])
+    print()
+    print(b['columns'])
+    print()
+    p.pprint(b['instructions'])
+    c = tokenize(b['rows'])
+    print(c)
 
 # ----------------------------------------------------------------------------
 def read_input(y):
@@ -61,8 +73,25 @@ def read_input(y):
 
 # ----------------------------------------------------------------------------
 def separate(inlist):
-    return inlist
+    #print(inlist)
+    rows = []
+    instructions = []
+    for line in inlist:
+        print(line)
+        if line.rstrip() == '':
+            pass
+        elif line[0:1] != 'm':
+            colNum = line.split()[-1]
+        elif '[' not in line:
+            rows.append(line)
+        else:
+            instructions.append(line)
+    return {'rows': rows, 'columns': colNum, 'instructions': instructions}
 
+# ----------------------------------------------------------------------------
+def tokenize(inlist):
+    numOfColumns = (len(inlist[-1]) + 1) // 4
+    return numOfColumns
 # ----------------------------------------------------------------------------
 def columns(intext):
     return intext
@@ -107,22 +136,33 @@ def test_separate():
                    'move 3 from 1 to 3',
                    'move 2 from 2 to 1',
                    'move 1 from 1 to 2']
-    rows = [['', '[D]', ''],
-            ['[N]', '[C]', ''],
-            ['[Z]', '[M]', '[P]']]
+    colNum = 3
+    rows = ['    [D]    ',
+            '[N] [C]    ',
+            '[Z] [M] [P]']
     instructions = ['move 1 from 2 to 1',
                     'move 3 from 1 to 3',
                     'move 2 from 2 to 1',
                     'move 1 from 1 to 2']
     assert separate(input_lines) == {'rows': rows,
+                                     'columns': colNum,
                                      'instructions': instructions}
 
 # ----------------------------------------------------------------------------
+def test_tokenize():
+    rows = ['    [D]    ',
+            '[N] [C]    ',
+            '[Z] [M] [P]']
+    toks = [[' ', '[D]', ' '],
+            ['[N]', '[C]', ' '],
+            ['[Z]', '[M]', '[P]']]
+    assert tokenize(rows) == toks
+# ----------------------------------------------------------------------------
 def test_columns():
-    rows = [['', '[D]', ''],
+    toks = [['', '[D]', ''],
             ['[N]', '[C]', ''],
             ['[Z]', '[M]', '[P]']]
-    assert columns(rows) == [['Z', 'N'],
+    assert columns(toks) == [['Z', 'N'],
                              ['M', 'C', 'D'],
                              ['P']]
 
