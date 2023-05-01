@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Author : Meidoragon<Meidoragon@localhost> 
-Date   : 2023-04-24
-Purpose: Row, row, fight the power.
+Author      : Meidoragon<Meidoragon@localhost> 
+Date        : 2023-04-24
+Purpose     : Row, row, fight the power.
+Disclaimer  : I am a fool.
 """
 #declarations
 test_input = """    [D]    
@@ -36,6 +37,7 @@ I CALLED IT
 
 import argparse
 import pprint as p
+import copy as cp
 
 # ----------------------------------------------------------------------------
 def get_args():
@@ -66,9 +68,11 @@ def main():
     b = separate(a)
     c = tokenize(b['rows'], b['columns'])
     d = columnize(c, b['columns'])
-    e = solve(d, b['instructions'])
-    print(pOne_answer(e))
-    
+    e = cp.deepcopy(d) #I sure did love trying to solve this bit
+    print('p1')
+    print(answer(solve(d, b['instructions'])))
+    print('p2')
+    print(answer(p2_solve(e, b['instructions'])))
 
 # ----------------------------------------------------------------------------
 def read_input(y):
@@ -130,6 +134,19 @@ def movement(columns, instruction):
     return columns
 
 # ----------------------------------------------------------------------------
+def p2_movement(columns, instruction):
+    looper = 0
+    insTo = instruction['to'] - 1
+    insFrom = instruction['from'] - 1
+    interList = []
+    while looper < instruction['move']:
+        interList.append(columns[insFrom].pop())
+        looper += 1
+    for ea in reversed(interList):
+        columns[insTo].append(ea)
+    return columns
+
+# ----------------------------------------------------------------------------
 def parse_instruct(line):
     outDict = {}
     spLine = line.split()
@@ -145,7 +162,13 @@ def solve(boxes, instructions):
     return boxes
 
 # ----------------------------------------------------------------------------
-def pOne_answer(boxes):
+def p2_solve(boxes, instructions):
+    for instruction in instructions:
+        p2_movement(boxes, parse_instruct(instruction))
+    return boxes
+
+# ----------------------------------------------------------------------------
+def answer(boxes):
     final = []
     for ea in boxes:
         final.append(ea[-1])
@@ -227,6 +250,26 @@ def test_movement():
     assert movement(b1, instruct2) == b2
 
 # ----------------------------------------------------------------------------
+def test_p2_movement():
+    a = [['Z', 'N'],
+         ['M', 'C', 'D'],
+         ['P']]
+    instruct1 = {'move': 1,
+                'from': 2,
+                'to': 1}
+    instruct2 = {'move': 3,
+                 'from': 1,
+                 'to': 3}
+    b1 = [['Z', 'N', 'D'],
+         ['M', 'C'],
+         ['P']]
+    b2 = [[],
+          ['M', 'C'],
+          ['P', 'Z', 'N', 'D']]
+    assert p2_movement(a, instruct1) == b1
+    assert p2_movement(b1, instruct2) == b2   
+
+# ----------------------------------------------------------------------------
 def test_parse_instruct():
     case0 = 'move 1 from 2 to 1'
     case1 = 'move 3 from 1 to 3'
@@ -261,8 +304,23 @@ def test_solve():
     assert solve(a, instruct) == b
 
 # ----------------------------------------------------------------------------
-def test_pOne_answer():
-    assert pOne_answer([['C'], ['M'], ['P', 'D', 'N', 'Z']]) == ('CMZ')
+def test_p2_solve():
+    a = [['Z', 'N'],
+         ['M', 'C', 'D'],
+         ['P']]
+    instruct = ['move 1 from 2 to 1',
+                'move 3 from 1 to 3',
+                'move 2 from 2 to 1',
+                'move 1 from 1 to 2']
+    b = [['M'],
+         ['C'],
+         ['P', 'Z', 'N', 'D']]
+    assert p2_solve(a, instruct) == b
+
+# ----------------------------------------------------------------------------
+def test_answer():
+    assert answer([['C'], ['M'], ['P', 'D', 'N', 'Z']]) == ('CMZ')
+    assert answer([['M'], ['C'], ['P', 'Z', 'N', 'D']]) == ('MCD')
 
 # ----------------------------------------------------------------------------
 if __name__ == '__main__':
