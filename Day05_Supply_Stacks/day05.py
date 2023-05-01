@@ -22,6 +22,11 @@ probably the entire group, so they end up inverted from what the P1 movement wou
 """
 
 """
+after getting to part two, I have to say.
+I CALLED IT
+"""
+
+"""
 1. Take input, group by line.
 2. separate the input groups by whether they are boxes or instructions.
 3. change box grouping from lines in the instructions to stacks of boxes.
@@ -31,8 +36,7 @@ probably the entire group, so they end up inverted from what the P1 movement wou
 
 import argparse
 import pprint as p
-import re
-reBoxes = re.compile(r" ([0-9]+( +[0-9]+)+) ")
+
 # ----------------------------------------------------------------------------
 def get_args():
     """Get command-line arguments"""
@@ -47,30 +51,25 @@ def get_args():
                         help="input",
                         default=test_input)
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    file = args.input
+    if args.input != test_input:
+        with open(file) as f:
+            args.input = f.read()
+    return args
 
 # ----------------------------------------------------------------------------
 def main():
     """Okay 3, 2, 1, Let's Jam"""
     args = get_args()
-    #print(args.input)
-    #print()
     a = read_input(args.input)
-    #p.pprint(a)
-    #print()
     b = separate(a)
-    #p.pprint(b['rows'])
-    #print()
-    #print(b['columns'])
-    #print()
-    #p.pprint(b['rows'])
-    #print()
-    #p.pprint(b['columns'])
-    #print()
-    #p.pprint(b['instructions'])
     c = tokenize(b['rows'], b['columns'])
-    p.pprint(c)
-    #print(c)
+    d = columnize(c, b['columns'])
+    e = solve(d, b['instructions'])
+    print(pOne_answer(e))
+    
+
 # ----------------------------------------------------------------------------
 def read_input(y):
     return y.split('\n')
@@ -103,25 +102,54 @@ def tokenize(inlist, colNum):
             looper += 1
         toklist.append(linelist[:])
     return toklist
-# ----------------------------------------------------------------------------
-def columns(intext):
-    return intext
 
 # ----------------------------------------------------------------------------
-def movement(inlist, instructions):
-    return inlist
+def columnize(inlist, colnum):
+    colList = []
+    looper1 = 0
+    while looper1 < colnum:
+        colList.append([])
+        looper1 += 1
+    for line in reversed(inlist):
+        looper2 = 0
+        while looper2 < len(line):
+            x = line[looper2].rstrip()
+            if x != '':
+                colList[looper2].append(x)
+            looper2 += 1
+    return colList
+
+# ----------------------------------------------------------------------------
+def movement(columns, instruction):
+    looper = 0
+    insTo = instruction['to'] - 1
+    insFrom = instruction['from'] - 1
+    while looper < instruction['move']:
+        columns[insTo].append(columns[insFrom].pop())
+        looper += 1
+    return columns
 
 # ----------------------------------------------------------------------------
 def parse_instruct(line):
-    return line
+    outDict = {}
+    spLine = line.split()
+    outDict['move'] = int(spLine[1])
+    outDict['from'] = int(spLine[3])
+    outDict['to'] = int(spLine[5])
+    return outDict
 
 # ----------------------------------------------------------------------------
-def solve(inlist):
-    return inlist
+def solve(boxes, instructions):
+    for instruction in instructions:
+        movement(boxes, parse_instruct(instruction))
+    return boxes
 
 # ----------------------------------------------------------------------------
-def pOne(intext):
-    return intext
+def pOne_answer(boxes):
+    final = []
+    for ea in boxes:
+        final.append(ea[-1])
+    return ''.join(final)
 
 # ----------------------------------------------------------------------------
 def test_read_input():
@@ -168,12 +196,13 @@ def test_tokenize():
             ['N', 'C', ' '],
             ['Z', 'M', 'P']]
     assert tokenize(rows, 3) == toks
+
 # ----------------------------------------------------------------------------
-def test_columns():
+def test_columnize():
     toks = [['', 'D', ''],
             ['N', 'C', ''],
             ['Z', 'M', 'P']]
-    assert columns(toks) == [['Z', 'N'],
+    assert columnize(toks, 3) == [['Z', 'N'],
                              ['M', 'C', 'D'],
                              ['P']]
 
@@ -182,14 +211,20 @@ def test_movement():
     a = [['Z', 'N'],
          ['M', 'C', 'D'],
          ['P']]
-    instruct = ['move 1 from 2 to 1',
-                'move 3 from 1 to 3',
-                'move 2 from 2 to 1',
-                'move 1 from 1 to 2']
-    b = [['C'],
-         ['M'],
-         ['P', 'D', 'N', 'Z']]
-    assert movement(a, instruct) == b
+    instruct1 = {'move': 1,
+                'from': 2,
+                'to': 1}
+    instruct2 = {'move': 3,
+                 'from': 1,
+                 'to': 3}
+    b1 = [['Z', 'N', 'D'],
+         ['M', 'C'],
+         ['P']]
+    b2 = [[],
+          ['M', 'C'],
+          ['P', 'D', 'N', 'Z']]
+    assert movement(a, instruct1) == b1
+    assert movement(b1, instruct2) == b2
 
 # ----------------------------------------------------------------------------
 def test_parse_instruct():
@@ -213,14 +248,21 @@ def test_parse_instruct():
 
 # ----------------------------------------------------------------------------
 def test_solve():
-    a = [['C'],
+    a = [['Z', 'N'],
+         ['M', 'C', 'D'],
+         ['P']]
+    instruct = ['move 1 from 2 to 1',
+                'move 3 from 1 to 3',
+                'move 2 from 2 to 1',
+                'move 1 from 1 to 2']
+    b = [['C'],
          ['M'],
          ['P', 'D', 'N', 'Z']]
-    assert solve(a) == 'CMZ'
+    assert solve(a, instruct) == b
 
 # ----------------------------------------------------------------------------
-def test_pOne():
-    assert pOne(test_input) == ('CMZ')
+def test_pOne_answer():
+    assert pOne_answer([['C'], ['M'], ['P', 'D', 'N', 'Z']]) == ('CMZ')
 
 # ----------------------------------------------------------------------------
 if __name__ == '__main__':
