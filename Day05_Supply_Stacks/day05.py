@@ -53,20 +53,24 @@ def get_args():
 def main():
     """Okay 3, 2, 1, Let's Jam"""
     args = get_args()
-    print(args.input)
-    print()
+    #print(args.input)
+    #print()
     a = read_input(args.input)
-    p.pprint(a)
-    print()
+    #p.pprint(a)
+    #print()
     b = separate(a)
-    p.pprint(b['rows'])
-    print()
-    print(b['columns'])
-    print()
-    p.pprint(b['instructions'])
-    c = tokenize(b['rows'])
-    print(c)
-
+    #p.pprint(b['rows'])
+    #print()
+    #print(b['columns'])
+    #print()
+    #p.pprint(b['rows'])
+    #print()
+    #p.pprint(b['columns'])
+    #print()
+    #p.pprint(b['instructions'])
+    c = tokenize(b['rows'], b['columns'])
+    p.pprint(c)
+    #print(c)
 # ----------------------------------------------------------------------------
 def read_input(y):
     return y.split('\n')
@@ -77,21 +81,28 @@ def separate(inlist):
     rows = []
     instructions = []
     for line in inlist:
-        print(line)
+        #print(line)
         if line.rstrip() == '':
-            pass
+            continue
+        elif '[' in line:
+            rows.append(line)
         elif line[0:1] != 'm':
             colNum = line.split()[-1]
-        elif '[' not in line:
-            rows.append(line)
         else:
             instructions.append(line)
-    return {'rows': rows, 'columns': colNum, 'instructions': instructions}
+    return {'rows': rows, 'columns': int(colNum), 'instructions': instructions}
 
 # ----------------------------------------------------------------------------
-def tokenize(inlist):
-    numOfColumns = (len(inlist[-1]) + 1) // 4
-    return numOfColumns
+def tokenize(inlist, colNum):
+    toklist = []
+    for line in inlist:
+        looper = 0
+        linelist = []
+        while looper < colNum:
+            linelist.append(line[1 + looper * 4])
+            looper += 1
+        toklist.append(linelist[:])
+    return toklist
 # ----------------------------------------------------------------------------
 def columns(intext):
     return intext
@@ -153,15 +164,15 @@ def test_tokenize():
     rows = ['    [D]    ',
             '[N] [C]    ',
             '[Z] [M] [P]']
-    toks = [[' ', '[D]', ' '],
-            ['[N]', '[C]', ' '],
-            ['[Z]', '[M]', '[P]']]
-    assert tokenize(rows) == toks
+    toks = [[' ', 'D', ' '],
+            ['N', 'C', ' '],
+            ['Z', 'M', 'P']]
+    assert tokenize(rows, 3) == toks
 # ----------------------------------------------------------------------------
 def test_columns():
-    toks = [['', '[D]', ''],
-            ['[N]', '[C]', ''],
-            ['[Z]', '[M]', '[P]']]
+    toks = [['', 'D', ''],
+            ['N', 'C', ''],
+            ['Z', 'M', 'P']]
     assert columns(toks) == [['Z', 'N'],
                              ['M', 'C', 'D'],
                              ['P']]
