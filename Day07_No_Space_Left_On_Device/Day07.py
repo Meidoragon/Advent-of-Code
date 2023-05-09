@@ -58,6 +58,7 @@ anything I could use it for is done by recursively adjusting directory size when
 """
 import argparse
 import os
+import pprint as p
 # ----------------------------------------------------------------------------
 class filesys():
     """
@@ -70,12 +71,13 @@ class filesys():
         self.userdir = self.add_init_direc(rootdir)
         self.sysdir = self.userdir
     
-    def cd(self, new_direc = None):
+    def cd(self, chDir = None):
         """new_direc defaults to self.userdir.parent"""
-        if new_direc == None:
+        if chDir == None:
             self.userdir = self.userdir.parent
         else:
-            self.userdir = self.dirDict[new_direc]
+            self.userdir = self.dirDict[chDir]
+        self.sysdir = self.userdir
 
     def add_init_direc(self, name, parent = None):
         x = newdir(name, parent)
@@ -92,10 +94,14 @@ class filesys():
     def add_new_file(self, name: str, size: int):
         x = newfile(name, self.userdir, size)
         self.fileDict[name] = x
-        self.sysdir.increase_size(size)
-        while self.sysdir.parent != None:
+        
+        #self.sysdir.increase_size(size)
+        first_pass = True
+        while (self.sysdir.parent != None or first_pass == True):
+            first_pass = False 
             self.sysdir.increase_size(size)
-            self.sysdir = self.sysdir.parent
+            if self.sysdir.parent != None:
+                self.sysdir = self.sysdir.parent
         self.sysdir = self.userdir
 # ----------------------------------------------------------------------------
 class newdir():
@@ -103,7 +109,6 @@ class newdir():
         self.name = name
         self.parent = parent
         self.size = 0
-        self.children = []
         
     def add_child(self, child):
         self.children.append(child)
@@ -111,12 +116,18 @@ class newdir():
     def increase_size(self, inc: int):
         self.size = self.size + inc
     
+    def this(self):
+        return{'name': self.name, 'parent': self.parent, 'size': self.size}
+    
 # ----------------------------------------------------------------------------
 class newfile():
     def __init__(self, name: str, parent: newdir, size: int):
         self.parent = parent
         self.size = size
         self.name = name
+    
+    def this(self):
+        return {'name': self.name, 'parent': self.parent, 'size': self.size}
 # ----------------------------------------------------------------------------
 def get_args():
     """Get command-line arguments"""
@@ -190,7 +201,11 @@ def main():
     """Okay 3, 2, 1, Let's Jam"""
     args = get_args()
     fs = build_map(args.intext.split('\n'))
-    print(fs)
+    for ea in fs.dirDict:
+        print(ea, fs.dirDict[ea].size)
+    print()
+    for ea in fs.fileDict:
+        print(ea, fs.fileDict[ea].size)
 
 
 # ----------------------------------------------------------------------------
