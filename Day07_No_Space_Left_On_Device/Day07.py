@@ -30,7 +30,9 @@ $ ls
 
 test_answer = 95437
 
-MAX_SIZE = 10 ** 5  #100 thou
+MAX_SIZE = 10 ** 5  #100 THOU
+TOTAL_CAPACITY = 7 * (10 ** 7) #7 MIL
+UPDATE_REQUIREMENT = 3 * (10 ** 7) #3 MIL
 
 """
 Plan:
@@ -202,17 +204,33 @@ def build_map(inlist: list) -> filesys:
             fs.add_new_file(x[1], int(x[0]))
     return fs
 # ----------------------------------------------------------------------------
-def main():
-    """Okay 3, 2, 1, Let's Jam"""
-    args = get_args()
-    fs = build_map(args.intext.split('\n'))
+def solvePartOne(fs):
     output = 0
     for ea in fs.dirDict:
         size = fs.dirDict[ea].size
         if size <= MAX_SIZE:
             output += size
     print(output)
-        
+
+# ----------------------------------------------------------------------------
+def solvePartTwo(fs):
+    usedSize = fs.dirDict['root0'].size
+    freeSpace = TOTAL_CAPACITY - usedSize
+    amountToRemove = UPDATE_REQUIREMENT - freeSpace
+    sizes = []
+    for ea in fs.dirDict:
+        loopvar = fs.dirDict[ea]
+        if loopvar.size > amountToRemove:
+            sizes.append(loopvar.size)
+    print(min(sizes))
+
+# ----------------------------------------------------------------------------
+def main():
+    """Okay 3, 2, 1, Let's Jam"""
+    args = get_args()
+    fs = build_map(args.intext.split('\n'))
+    solvePartOne(fs)
+    solvePartTwo(fs)
 
 
 # ----------------------------------------------------------------------------
