@@ -96,12 +96,9 @@ class filesys():
         self.fileDict[name] = x
         
         #self.sysdir.increase_size(size)
-        first_pass = True
-        while (self.sysdir.parent != None or first_pass == True):
-            first_pass = False 
+        while (self.sysdir!= None):
             self.sysdir.increase_size(size)
-            if self.sysdir.parent != None:
-                self.sysdir = self.sysdir.parent
+            self.sysdir = self.sysdir.parent
         self.sysdir = self.userdir
 # ----------------------------------------------------------------------------
 class newdir():
@@ -201,11 +198,13 @@ def main():
     """Okay 3, 2, 1, Let's Jam"""
     args = get_args()
     fs = build_map(args.intext.split('\n'))
+    output = 0
     for ea in fs.dirDict:
-        print(ea, fs.dirDict[ea].size)
-    print()
-    for ea in fs.fileDict:
-        print(ea, fs.fileDict[ea].size)
+        size = fs.dirDict[ea].size
+        if size <= MAX_SIZE:
+            output += size
+    print(output)
+        
 
 
 # ----------------------------------------------------------------------------
