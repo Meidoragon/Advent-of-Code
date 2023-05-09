@@ -56,6 +56,7 @@ consider writing code that would create a visual map of this nonsense just for f
 untill I do that, mapping children likely won't be used for anything. 
 anything I could use it for is done by recursively adjusting directory size whenever I add a new file
 """
+
 import argparse
 import os
 import pprint as p
@@ -66,6 +67,7 @@ class filesys():
     automatically adds the root directory on __init__.
     """
     def __init__(self, rootdir = 'root'):
+        self.dictNameUniquifier = 0
         self.dirDict = {}
         self.fileDict = {}
         self.userdir = self.add_init_direc(rootdir)
@@ -80,22 +82,28 @@ class filesys():
         self.sysdir = self.userdir
 
     def add_init_direc(self, name, parent = None):
+        name += str(self.dictNameUniquifier)
+        self.dictNameUniquifier += 1
         x = newdir(name, parent)
         self.dirDict[name] = x
         return x
     
     def add_new_direc(self, name, parent = None):
+        name += str(self.dictNameUniquifier)
+        self.dictNameUniquifier += 1
         if parent == None:
             parent = self.userdir
         x = newdir(name, parent)
         self.dirDict[name] = x
+        return x
  
     
     def add_new_file(self, name: str, size: int):
+        name += str(self.dictNameUniquifier)
+        self.dictNameUniquifier += 1
         x = newfile(name, self.userdir, size)
         self.fileDict[name] = x
-        
-        #self.sysdir.increase_size(size)
+
         while (self.sysdir!= None):
             self.sysdir.increase_size(size)
             self.sysdir = self.sysdir.parent
@@ -184,8 +192,8 @@ def build_map(inlist: list) -> filesys:
         elif lineParsed == 1:
             #split line, send dir name to fs for new directory
             x = line.split()
-            fs.add_new_direc(x[2])
-            fs.cd(x[2])
+            y = fs.add_new_direc(x[2])
+            fs.cd(y.name)
         elif lineParsed == 2:
             fs.cd()
         elif lineParsed == 3:
