@@ -64,21 +64,35 @@ class filesys():
     creates the file system object and has functions to add directories and files to it.
     automatically adds the root directory on __init__.
     """
-    def __init__(self):
-        self.group = {}
-        self.userdir = self.add_new_direc('root', None)
+    def __init__(self, rootdir = 'root'):
+        self.dirDict = {}
+        self.fileDict = {}
+        self.userdir = self.add_init_direc(rootdir)
         self.sysdir = self.userdir
     
-    def cd(self, new_direc: object):
-        self.userdir = new_direc
+    def cd(self, new_direc = None):
+        """new_direc defaults to self.userdir.parent"""
+        if new_direc == None:
+            self.userdir = self.userdir.parent
+        else:
+            self.userdir = self.dirDict[new_direc]
 
-    def add_new_direc(self, name, parent):
+    def add_init_direc(self, name, parent = None):
         x = newdir(name, parent)
-        self.group[name] = x
+        self.dirDict[name] = x
         return x
+    
+    def add_new_direc(self, name, parent = None):
+        if parent == None:
+            parent = self.userdir
+        x = newdir(name, parent)
+        self.dirDict[name] = x
+ 
     
     def add_new_file(self, name: str, size: int):
         x = newfile(name, self.userdir, size)
+        self.fileDict[name] = x
+        self.sysdir.increase_size(size)
         while self.sysdir.parent != None:
             self.sysdir.increase_size(size)
             self.sysdir = self.sysdir.parent
@@ -91,19 +105,18 @@ class newdir():
         self.size = 0
         self.children = []
         
-
     def add_child(self, child):
         self.children.append(child)
     
     def increase_size(self, inc: int):
-        self.size += inc
+        self.size = self.size + inc
     
 # ----------------------------------------------------------------------------
 class newfile():
     def __init__(self, name: str, parent: newdir, size: int):
         self.parent = parent
         self.size = size
-
+        self.name = name
 # ----------------------------------------------------------------------------
 def get_args():
     """Get command-line arguments"""
@@ -127,17 +140,22 @@ def get_args():
 def parse_line(line: str) -> int:
     """
     0: ignore this line
-    1: add new dir
-    2: add new file
-    3: go up a level
-    4: go down a level
+    1: add new dir and cd in
+    2: cd out
+    3: add new file
     """
-    if line[0] == '$':
-        return parse_command(line)
-    elif line[0:3] == 'dir': #probably this, might be line[0:2] depending on how slices work, I am not looking it up right now
+    if line == '$ ls':
         return 0
-    elif line[0] in '0123456789':
+    elif line[0:3] == 'dir':
+        return 0
+    elif line == '$ cd /':
+        return 4
+    elif line == '$ cd ..':
+        return 2
+    elif line[0:4] == '$ cd':
         return 1
+    elif line[0] in '0123456789':
+        return 3
     else:
         raise Exception('parse line error with:', line)
 
@@ -145,10 +163,28 @@ def parse_line(line: str) -> int:
 def parse_command(line: str) -> int:
     pass
 # ----------------------------------------------------------------------------
-def build_map(inlist: list):
+def build_map(inlist: list) -> filesys:
+    #uses elifs because when I noticed that I would need to update python to use
+    #some variety of switch statement I decided that I was too lazy to do that
+    #just know that this would be a match...case section instead
     for line in inlist:
-        x = parse_line(line)
-    return inlist
+        lineParsed = parse_line(line)
+        if lineParsed == 4:
+            fs = filesys()
+        elif lineParsed == 0:
+            continue
+        elif lineParsed == 1:
+            #split line, send dir name to fs for new directory
+            x = line.split()
+            fs.add_new_direc(x[2])
+            fs.cd(x[2])
+        elif lineParsed == 2:
+            fs.cd()
+        elif lineParsed == 3:
+            #split line, send filename and size to fs for new file
+            x = line.split()
+            fs.add_new_file(x[1], int(x[0]))
+    return fs
 # ----------------------------------------------------------------------------
 def main():
     """Okay 3, 2, 1, Let's Jam"""
@@ -156,16 +192,18 @@ def main():
     fs = build_map(args.intext.split('\n'))
     print(fs)
 
+
 # ----------------------------------------------------------------------------
 if __name__ == '__main__':
     main()
 
 # ----------------------------------------------------------------------------
 def test_parse_line():
-    pass
-
-# ----------------------------------------------------------------------------
-def test_build_map():
-    pass
+    assert parse_line('$ ls') == 0              #just ls, ignore
+    assert parse_line('$ cd /') == 4            #instantiate fs
+    assert parse_line('1231516 q.mp3') == 3     #create file
+    assert parse_line('$ cd ..') == 2           #move out
+    assert parse_line('dir bjrbjh') == 0        #dir from ls, ignore because we only act on dir when cd
+    assert parse_line('$ cd gjzdf') == 1        #change dir, create, and then move in
 
 # ----------------------------------------------------------------------------
