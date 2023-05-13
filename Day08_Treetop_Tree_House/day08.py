@@ -2,17 +2,26 @@
 """
 Author : Meidoragon<Meidoragon@localhost> 
 Date   : 2023-05-09
-Purpose: Row, row, fight the power.
+Purpose: solve day 8 of advent of code 2022.
+Important to note that this would likely be faster by properly using a numpy
+array, but I just wish to get it working right now. I can optimize later if I 
+ever decide to come back to this.
 """
 
-test_input = """30373
+TEST_INPUT = """30373
 25512
 65332
 33549
 35390"""
+PARSED_INPUT = [[3, 0, 3, 7, 3],
+                [2, 5, 5, 1, 2],
+                [6, 5, 3, 3, 2],
+                [3, 3, 5, 4, 9],
+                [3, 5, 3, 9, 0]]
 
 import argparse
 import os
+import pprint as p
 # ----------------------------------------------------------------------------
 def get_args():
     """Get command-line arguments"""
@@ -23,21 +32,75 @@ def get_args():
                         nargs='?',
                         metavar='str',
                         help='Input. Accepts files.',
-                        default=test_input)
+                        default=TEST_INPUT)
                         
     args = parser.parse_args()
     
-    if args.intext != test_input and os.path.isfile(args.intext):
+    if args.intext != TEST_INPUT and os.path.isfile(args.intext):
         file = args.intext
         with open(file) as f:
             args.intext = f.read()
     return args
+# ----------------------------------------------------------------------------
+def parse_input(into) -> list[list[int]]:
+    '''parses raw string input and maps to 2d array'''
+    parse = []
+    for ea in into.split('\n'):
+        x = []
+        for y in ea:
+            x.append(int(y))
+        parse.append(x)
+    return parse
+# ----------------------------------------------------------------------------
 
+def isHidden(y, x, matrix = PARSED_INPUT) -> bool:
+    '''returns boolean value for whether coordinate contains visible tree'''
+    isEdge = (y == 0 or y == len(matrix) or x == 0 or x == len(matrix[y]))
+    if isEdge:
+        return False
+    value = matrix[y][x]
+    visibility = []
+    
+# ----------------------------------------------------------------------------
+def solve(matrix) -> int:
+    height, width = len(matrix), len(matrix[0])
+    visible = 0
+    for yCoord, xCoord in xyGenerator(height, width):
+        if not isHidden(yCoord, xCoord, matrix):
+            visible += 1
+    return visible
+# ----------------------------------------------------------------------------
+def xyGenerator(height, width):
+    for a in range(0, width, 1):
+        for b in range(0, height, 1):
+            yield a, b
+# ----------------------------------------------------------------------------
+def test_parse_input():
+    assert parse_input(TEST_INPUT) == PARSED_INPUT
+# ----------------------------------------------------------------------------
+def test_isHidden():
+    assert not isHidden(1, 1) #top left five, should return false
+    assert not isHidden(1, 2) #top middle five, should return false
+    assert isHidden(1, 3)     #top right 1, should return true
+    assert not isHidden(2, 1) #middle left 5, should return false
+    assert isHidden(2, 2)     #center 3, should return true
+    assert not isHidden(2, 3) #middle right, should return false
+    assert isHidden(3, 1)     #bottom left, should return true
+    assert not isHidden(3, 2) #bottom middle, should return false
+    assert isHidden(3, 3)     #bottom right, should return true
+    assert not isHidden(0, 3) #these next four are on the outside
+    assert not isHidden(4, 3) #they should all return false
+    assert not isHidden(3, 0)
+    assert not isHidden(3, 4)
+# ----------------------------------------------------------------------------
+def test_solve():
+    assert solve(PARSED_INPUT) == 21
 # ----------------------------------------------------------------------------
 def main():
     """Okay 3, 2, 1, Let's Jam"""
     args = get_args()
-
+    print(solve(parse_input(args.intext)))
+    
 # ----------------------------------------------------------------------------
 if __name__ == '__main__':
     main()
