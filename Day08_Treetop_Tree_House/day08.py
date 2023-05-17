@@ -55,12 +55,44 @@ def parse_input(into) -> list[list[int]]:
 
 def isHidden(y, x, matrix = PARSED_INPUT) -> bool:
     '''returns boolean value for whether coordinate contains visible tree'''
+    #this is going to be a mess. fix it later if we come back to this.
     isEdge = (y == 0 or y == len(matrix) or x == 0 or x == len(matrix[y]))
     if isEdge:
         return False
     value = matrix[y][x]
-    visibility = []
+    vertical = getVertical(x, matrix)
+    horizontal = matrix[y]
+    if not lineHidden(x, value, horizontal):
+        return False
+    if not lineHidden(y, value, vertical):
+        return False
+    return True
     
+    #print(f'hor: {horizontal}', f'vert: {vertical}', f'y: {y}', f'x: {x}', sep='\n')
+    #visibility = []
+# ----------------------------------------------------------------------------
+def lineHidden(base, val, line) -> bool:
+    plusHidden = False
+    minusHidden = False
+    for var in range(0, len(line), 1):
+        if var == base:
+            continue
+        comp = line[var]
+        if val <= comp:
+            if var < base:
+                minusHidden = True
+            if var > base:
+                plusHidden = True
+    if plusHidden and minusHidden:
+        return True
+    else:
+        return False
+# ----------------------------------------------------------------------------
+def getVertical(x, matrix = PARSED_INPUT):      #include default value for testing. probably unnecessary and bad practice
+    retList = []
+    for loopVar in matrix:
+        retList.append(loopVar[x])
+    return retList
 # ----------------------------------------------------------------------------
 def solve(matrix) -> int:
     height, width = len(matrix), len(matrix[0])
@@ -77,6 +109,18 @@ def xyGenerator(height, width):
 # ----------------------------------------------------------------------------
 def test_parse_input():
     assert parse_input(TEST_INPUT) == PARSED_INPUT
+# ----------------------------------------------------------------------------
+def test_getVertical():
+    x0 = [3, 2, 6, 3, 3]
+    x1 = [0, 5, 5, 3, 5]
+    x2 = [3, 5, 3, 5, 3]
+    x3 = [7, 1, 3, 4, 9]
+    x4 = [3, 2, 2, 9, 0]
+    assert getVertical(0) == x0
+    assert getVertical(1) == x1
+    assert getVertical(2) == x2
+    assert getVertical(3) == x3
+    assert getVertical(4) == x4
 # ----------------------------------------------------------------------------
 def test_isHidden():
     assert not isHidden(1, 1) #top left five, should return false
